@@ -1719,6 +1719,16 @@ syncache_respond(struct syncache *sc, struct syncache_head *sch,
 
 	if (sc->sc_flags & SCF_ECN) {
 		th->th_flags |= TH_ECE;
+		if (len > 0 && SEQ_GEQ(tp->snd_nxt, tp->snd_max) &&
+		    !((tp->t_flags & TF_FORCEDATA) && len == 1)) {
+#ifdef INET6
+			if (isipv6)
+				ip6->ip6_flow |= htonl(IPTOS_ECN_ECT0 << 20);
+			else
+#endif
+				ip->ip_tos |= IPTOS_ECN_ECT0;
+			TCPSTAT_INC(tcps_ecn_ect0);
+		}
 		TCPSTAT_INC(tcps_ecn_shs);
 	}
 
