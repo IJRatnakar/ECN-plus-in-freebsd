@@ -1671,7 +1671,7 @@ syncache_respond(struct syncache *sc, struct syncache_head *sch,
 		/* ip6_hlim is set after checksum */
 		ip6->ip6_flow &= ~IPV6_FLOWLABEL_MASK;
 		ip6->ip6_flow |= sc->sc_flowlabel;
-		ip6->ip6_flow |= htonl(IPTOS_ECN_ECT0 << 20);
+		
 		
 
 		th = (struct tcphdr *)(ip6 + 1);
@@ -1694,8 +1694,7 @@ syncache_respond(struct syncache *sc, struct syncache_head *sch,
 		ip->ip_dst = sc->sc_inc.inc_faddr;
 		ip->ip_ttl = sc->sc_ip_ttl;
 		ip->ip_tos = sc->sc_ip_tos;
-		ip->ip_tos |= IPTOS_ECN_ECT0;
-
+		
 		/*
 		 * See if we should do MTU discovery.  Route lookups are
 		 * expensive, so we will only unset the DF bit if:
@@ -1722,6 +1721,11 @@ syncache_respond(struct syncache *sc, struct syncache_head *sch,
 
 	if (sc->sc_flags & SCF_ECN) {
 		th->th_flags |= TH_ECE;
+		if (isipv6)
+	        ip6->ip6_flow |= htonl(IPTOS_ECN_ECT0 << 20);
+		else
+		ip->ip_tos |= IPTOS_ECN_ECT0;
+
 		TCPSTAT_INC(tcps_ecn_shs);
 	}
 
